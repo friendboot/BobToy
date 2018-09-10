@@ -56,7 +56,7 @@
         if (!result) {
             number = 1;
         } else {
-            if(result >= 15){
+            if(result >= 2){
                 result = 0;
             }
             number = result+1;
