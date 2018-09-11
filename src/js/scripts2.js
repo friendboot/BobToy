@@ -63,32 +63,6 @@ function start() {
 }
 
 /**
- * Criação de grupo de estrelas
- */
-function createStars() {
-    stars = game.physics.add.group({
-        key: 'star',
-        repeat: 11,
-        setXY: { x: 12, y: 0, stepX: 70 }
-    });
-
-    //Ao colidir estrelas com plataformas, é realizado calculo para que
-    //a estrela gradualmente vá se aproximando do plataforma, até que fique
-    //totalmente parada sobre a plataforma
-    stars.children.iterate(function (child) {
-        child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
-    });
-}
-
-/**
- * Cria imagens na cena
- */
-function createImages() {
-    game.add.image(400, 300, 'sky');
-    game.add.image(400, 300, 'star');
-}
-
-/**
  * Cria as plataformas na cena
  */
 function createPlatforms() {
@@ -163,20 +137,10 @@ function create() {
     player.body.fixedRotation = true; // do not rotate on collision
     player.body.mass = 4;
     
-     //game.physics.arcade.enable(player); 
-     //player.body.bounce.y = 0.2;
-     //player.body.gravity.y = 300;
-     //player.body.collideWorldBounds = true;
-
     // add some animations 
     player.animations.add('walk', [1, 2, 3, 4], 10, true);  // (key, framesarray, fps,repeat)
     player.animations.add('duck', [11], 0, true);
     player.animations.add('duckwalk', [10, 11, 12], 3, true);
-    //game.camera.follow(player); //always center player
-
-    // add some animations 
-    // player.animations.add('left', [0, 1, 2, 3], 10, true);
-    // player.animations.add('right', [5, 6, 7, 8], 10, true);
 
     // create our virtual game controller buttons 
     buttonjump = game.add.button(700, 500, 'buttonjump', null, this, 0, 1, 0, 1);  //game, x, y, key, callback, callbackContext, overFrame, outFrame, downFrame, upFrame
@@ -202,10 +166,6 @@ function create() {
 };
 
 function update() {
-
-     //  Collide the player and the stars with the platforms
-     //var hitPlatform = game.physics.arcade.collide(player, platforms);     
-     //game.physics.p2.collide(player, platforms);
 
     // define what should happen when a button is pressed
     if (left && !duck) {
