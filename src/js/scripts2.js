@@ -1,20 +1,11 @@
 var game = new Phaser.Game(800, 600, Phaser.AUTO, 'phaser-example', { preload: preload, create: create, update: update, render: render });
 
-/*
-    virtual gamecontroller with phaser.js
-    buttons, sprite(sheet)s (animation) and code of this example by valueerror - mario by nintendo ;-)
-*/
-
 //some global vars 
-var fireballs;
-var fireRate = 300;
-var nextFire = 0;
 var nextJump = 0;
 var player;
 var left = false;
 var right = false;
 var duck = false;
-var fire = false;
 var jump = false;
 
 var keyMusic = "keymusic";
@@ -31,15 +22,13 @@ function preload() {
     //background, ground, fireball images
     game.load.image('ground', 'assets/misc/2048x48-ground.png');
     game.load.image('platform', 'assets/platform.png');
-    game.load.image('clouds', 'assets/misc/clouds.jpg');
-    game.load.image('fireball', 'assets/misc/fireball.png', 40, 30);
+    game.load.image('clouds', 'assets/misc/clouds.jpg');    
     game.load.image('sky', 'assets/sky.png');
     game.load.image('star', 'assets/star.png');
     game.load.image('bomb', 'assets/bomb.png');
 
     //gamepad buttons    
-    game.load.spritesheet('buttonhorizontal', 'assets/buttons/buttons-big/button-horizontal.png', 96, 64);
-    game.load.spritesheet('buttonfire', 'assets/buttons/buttons-big/button-round-a.png', 96, 96);
+    game.load.spritesheet('buttonhorizontal', 'assets/buttons/buttons-big/button-horizontal.png', 96, 64);    
     game.load.spritesheet('buttonjump', 'assets/buttons/buttons-big/button-round-b.png', 96, 96);
 
     // fullscreen setup
@@ -105,7 +94,8 @@ function createImages() {
 function createPlatforms() {
 
     //  We're going to be using physics, so enable the Arcade Physics system
-    game.physics.startSystem(Phaser.Physics.ARCADE);
+    //game.physics.startSystem(Phaser.Physics.ARCADE);
+    game.physics.startSystem(Phaser.Physics.P2JS);
 
     //  A simple background for our game
     game.add.sprite(0, 0, 'sky');
@@ -147,7 +137,7 @@ function playMusic() {
 function create() {
     if (!game.device.desktop) { game.input.onDown.add(gofull, this); } //go fullscreen on mobile devices
 
-    playMusic();
+    //playMusic();
 
     //createImages();
 
@@ -155,7 +145,7 @@ function create() {
 
     createPlatforms();
     
-    game.physics.startSystem(Phaser.Physics.P2JS);  //activate physics
+    //game.physics.startSystem(Phaser.Physics.P2JS);  //activate physics
     game.physics.p2.gravity.y = 1200;  //realistic gravity
     //game.world.setBounds(0, 0, 2000, 600);//(x, y, width, height)
     game.physics.p2.setBoundsToWorld(true, true, false, true, false); //(left, right, top, bottom, setCollisionGroup)
@@ -165,10 +155,7 @@ function create() {
     //ground = game.add.sprite(game.world.width / 2, game.world.height - 24, 'ground');
     //game.physics.p2.enable(ground);  //enable physics so our player will not fall through ground but collide with it
     //ground.body.static = true;    // ground should not move
-
-    fireballs = game.add.group();  // add a new group for fireballs
-    fireballs.createMultiple(500, 'fireball', 0, false);  // create plenty of them hidden and out of the game world
-
+    
     //setup our player
     player = game.add.sprite(350, game.world.height - 150, 'mario'); //create and position player    
     game.physics.p2.enable(player);
@@ -176,7 +163,6 @@ function create() {
     player.body.fixedRotation = true; // do not rotate on collision
     player.body.mass = 4;
     
-
      //game.physics.arcade.enable(player); 
      //player.body.bounce.y = 0.2;
      //player.body.gravity.y = 300;
@@ -193,19 +179,12 @@ function create() {
     // player.animations.add('right', [5, 6, 7, 8], 10, true);
 
     // create our virtual game controller buttons 
-    buttonjump = game.add.button(600, 500, 'buttonjump', null, this, 0, 1, 0, 1);  //game, x, y, key, callback, callbackContext, overFrame, outFrame, downFrame, upFrame
+    buttonjump = game.add.button(700, 500, 'buttonjump', null, this, 0, 1, 0, 1);  //game, x, y, key, callback, callbackContext, overFrame, outFrame, downFrame, upFrame
     buttonjump.fixedToCamera = true;  //our buttons should stay on the same place  
     buttonjump.events.onInputOver.add(function () { jump = true; });
     buttonjump.events.onInputOut.add(function () { jump = false; });
     buttonjump.events.onInputDown.add(function () { jump = true; });
     buttonjump.events.onInputUp.add(function () { jump = false; });
-
-    buttonfire = game.add.button(700, 500, 'buttonfire', null, this, 0, 1, 0, 1);
-    buttonfire.fixedToCamera = true;
-    buttonfire.events.onInputOver.add(function () { fire = true; });
-    buttonfire.events.onInputOut.add(function () { fire = false; });
-    buttonfire.events.onInputDown.add(function () { fire = true; });
-    buttonfire.events.onInputUp.add(function () { fire = false; });
 
     buttonleft = game.add.button(0, 525, 'buttonhorizontal', null, this, 0, 1, 0, 1);
     buttonleft.fixedToCamera = true;
@@ -226,7 +205,6 @@ function update() {
 
      //  Collide the player and the stars with the platforms
      //var hitPlatform = game.physics.arcade.collide(player, platforms);     
-
      //game.physics.p2.collide(player, platforms);
 
     // define what should happen when a button is pressed
@@ -257,14 +235,13 @@ function update() {
     else {
         player.loadTexture('mario', 0);
     }
-    if (jump) { jump_now(); player.loadTexture('mario', 5); }  //change to another frame of the spritesheet
-    if (fire) { fire_now(); player.loadTexture('mario', 8); }
+
+    if (jump) { jump_now(); player.loadTexture('mario', 5); }  //change to another frame of the spritesheet    
     if (duck) { player.body.setCircle(16, 0, 6); } else { player.body.setCircle(22); }  //when ducking create a smaller hitarea - (radius,offsetx,offsety)
-    if (game.input.currentPointers == 0 && !game.input.activePointer.isMouse) { fire = false; right = false; left = false; duck = false; jump = false; } //this works around a "bug" where a button gets stuck in pressed state
+    if (game.input.currentPointers == 0 && !game.input.activePointer.isMouse) { right = false; left = false; duck = false; jump = false; } //this works around a "bug" where a button gets stuck in pressed state
 };
 
-function render() {
-    game.debug.text('jump:' + jump + ' duck:' + duck + ' left:' + left + ' right:' + right + ' fire:' + fire, 20, 20);
+function render() {    
 }
 
 //some useful functions
@@ -273,27 +250,5 @@ function jump_now() {  //jump with small delay
     if (game.time.now > nextJump) {
         player.body.moveUp(600);
         nextJump = game.time.now + 900;
-    }
-}
-function fire_now() {
-    if (game.time.now > nextFire) {
-        nextFire = game.time.now + fireRate;
-        var fireball = fireballs.getFirstExists(false); // get the first created fireball that no exists atm
-        if (fireball) {
-            fireball.exists = true;  // come to existance !
-            fireball.lifespan = 2500;  // remove the fireball after 2500 milliseconds - back to non-existance
-            if (player.scale.x == -1) {  // if player looks to the left - create the fireball on his left side
-                fireball.reset(player.x - 20, player.y);
-                game.physics.p2.enable(fireball);
-                fireball.body.moveLeft(800);
-                fireball.body.moveDown(180);
-            } else {
-                fireball.reset(player.x + 20, player.y);
-                game.physics.p2.enable(fireball);
-                fireball.body.moveRight(800);
-                fireball.body.moveDown(180);
-            }
-            fireball.body.setCircle(10);
-        }
     }
 }
