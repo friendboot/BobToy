@@ -1,7 +1,6 @@
 var game = new Phaser.Game(800, 600, Phaser.AUTO, 'phaser-example', { preload: preload, create: create, update: update, render: render });
 
 //some global vars 
-var nextJump = 0;
 var player;
 var left = false;
 var right = false;
@@ -22,13 +21,13 @@ function preload() {
     //background, ground, fireball images
     game.load.image('ground', 'assets/misc/2048x48-ground.png');
     game.load.image('platform', 'assets/platform.png');
-    game.load.image('clouds', 'assets/misc/clouds.jpg');    
+    game.load.image('clouds', 'assets/misc/clouds.jpg');
     game.load.image('sky', 'assets/sky.png');
     game.load.image('star', 'assets/star.png');
     game.load.image('bomb', 'assets/bomb.png');
 
     //gamepad buttons    
-    game.load.spritesheet('buttonhorizontal', 'assets/buttons/buttons-big/button-horizontal.png', 96, 64);    
+    game.load.spritesheet('buttonhorizontal', 'assets/buttons/buttons-big/button-horizontal.png', 96, 64);
     game.load.spritesheet('buttonjump', 'assets/buttons/buttons-big/button-round-b.png', 96, 96);
 
     // fullscreen setup
@@ -68,9 +67,8 @@ function start() {
 function createPlatforms() {
 
     //  We're going to be using physics, so enable the Arcade Physics system
-    //game.physics.startSystem(Phaser.Physics.ARCADE);
-    game.physics.startSystem(Phaser.Physics.P2JS);
-
+    game.physics.startSystem(Phaser.Physics.ARCADE);
+    
     //  A simple background for our game
     game.add.sprite(0, 0, 'sky');
 
@@ -111,7 +109,7 @@ function playMusic() {
 function create() {
     if (!game.device.desktop) { game.input.onDown.add(gofull, this); } //go fullscreen on mobile devices
 
-    //playMusic();
+    playMusic();
 
     //createImages();
 
@@ -119,24 +117,27 @@ function create() {
 
     createPlatforms();
     
-    //game.physics.startSystem(Phaser.Physics.P2JS);  //activate physics
-    game.physics.p2.gravity.y = 1200;  //realistic gravity
+    //game.physics.arcade.gravity.y = 1200;  //realistic gravity
     //game.world.setBounds(0, 0, 2000, 600);//(x, y, width, height)
-    game.physics.p2.setBoundsToWorld(true, true, false, true, false); //(left, right, top, bottom, setCollisionGroup)
-    game.physics.p2.friction = 5;   // default friction between ground and player or fireballs
+    game.physics.arcade.setBoundsToWorld(true, true, false, true, false); //(left, right, top, bottom, setCollisionGroup)
+    game.physics.arcade.friction = 5;   // default friction between ground and player or fireballs
 
     //clouds = game.add.tileSprite(0, 0, 2048, 600, 'clouds'); //add tiling sprite to cover the whole game world
     //ground = game.add.sprite(game.world.width / 2, game.world.height - 24, 'ground');
     //game.physics.p2.enable(ground);  //enable physics so our player will not fall through ground but collide with it
     //ground.body.static = true;    // ground should not move
-    
+
     //setup our player
     player = game.add.sprite(350, game.world.height - 150, 'mario'); //create and position player    
-    game.physics.p2.enable(player);
+    game.physics.arcade.enable(player);
     player.body.setCircle(22);  // collision circle 
     player.body.fixedRotation = true; // do not rotate on collision
     player.body.mass = 4;
-    
+
+    player.body.bounce.y = 0.2;
+    player.body.gravity.y = 300;
+    player.body.collideWorldBounds = true;
+
     // add some animations 
     player.animations.add('walk', [1, 2, 3, 4], 10, true);  // (key, framesarray, fps,repeat)
     player.animations.add('duck', [11], 0, true);
@@ -167,15 +168,21 @@ function create() {
 
 function update() {
 
+    //  Collide the player and the stars with the platforms
+    game.physics.arcade.collide(player, platforms);
+
+    //  Reset the players velocity (movement)
+    player.body.velocity.x = 0;
+
     // define what should happen when a button is pressed
     if (left && !duck) {
-        player.scale.x = -1;
-        player.body.moveLeft(500);
+        player.scale.x = 1;
+        player.body.velocity.x = -150
         player.animations.play('walk');
     }
     else if (right && !duck) {
-        player.scale.x = 1;
-        player.body.moveRight(500);
+        player.scale.x = -1;
+        player.body.velocity.x = 150
         player.animations.play('walk');
     }
     else if (duck && !left && !right) {
@@ -183,13 +190,13 @@ function update() {
         player.animations.play('duck');
     }
     else if (duck && right) {
-        player.scale.x = 1;
-        player.body.moveRight(200);
+        player.scale.x = -1;
+        player.body.velocity.x = -200
         player.animations.play('duckwalk');
     }
     else if (duck && left) {
-        player.scale.x = -1;
-        player.body.moveLeft(200);
+        player.scale.x = 1;
+        player.body.velocity.x = 200
         player.animations.play('duckwalk');
     }
     else {
@@ -201,14 +208,13 @@ function update() {
     if (game.input.currentPointers == 0 && !game.input.activePointer.isMouse) { right = false; left = false; duck = false; jump = false; } //this works around a "bug" where a button gets stuck in pressed state
 };
 
-function render() {    
+function render() {
 }
 
 //some useful functions
 function gofull() { game.scale.startFullScreen(false); }
 function jump_now() {  //jump with small delay
-    if (game.time.now > nextJump) {
-        player.body.moveUp(600);
-        nextJump = game.time.now + 900;
+    if (player.body.touching.down) {
+        player.body.velocity.y = -350;        
     }
 }
